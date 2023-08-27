@@ -174,6 +174,7 @@ func (c *Client) Download(filePath string) (io.ReadCloser, error) {
 		if err != nil {
 			return nil, err
 		}
+		defer tmp.Close()
 		err = c.ftpClient.Retrieve(filePath, tmp)
 		if err != nil {
 			if strings.Contains(err.Error(), "550-Failed to open file") {
@@ -181,6 +182,8 @@ func (c *Client) Download(filePath string) (io.ReadCloser, error) {
 			}
 			return nil, err
 		}
+		//Close the temp file before removing it
+		tmp.Close()
 		buf, err := os.ReadFile(fn)
 		os.Remove(fn)
 		return io.NopCloser(bytes.NewBuffer(buf)), err
