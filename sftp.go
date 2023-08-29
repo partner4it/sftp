@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/pkg/sftp"
-	"github.com/secsy/goftp"
+	"github.com/sjhoeksma/goftp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -29,6 +29,7 @@ type Config struct {
 	Timeout          time.Duration
 	ActiveTransfers  bool
 	ActiveListenAddr string
+	IgnoreHost       bool
 }
 
 // Client provides basic functionality to interact with a SFTP server.
@@ -250,6 +251,7 @@ func (c *Client) connect() error {
 			TLSMode:          goftp.TLSExplicit, //TLSImplicit TLSExplicit
 			ActiveTransfers:  c.config.ActiveTransfers,
 			ActiveListenAddr: c.config.ActiveListenAddr,
+			IgnoreHost:       c.config.IgnoreHost, //Ignore host
 		}
 		c.ftpClient, err = goftp.DialConfig(cfg, c.config.Server)
 		return err
