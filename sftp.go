@@ -1,4 +1,4 @@
-//Run a sftp connection over ssh
+// Run a sftp connection over ssh
 package sftp
 
 import (
@@ -20,13 +20,15 @@ import (
 
 // Config represents SSH connection parameters.
 type Config struct {
-	Username     string
-	Password     string
-	PrivateKey   string
-	Server       string
-	KeyExchanges []string
-	TLS          bool
-	Timeout      time.Duration
+	Username         string
+	Password         string
+	PrivateKey       string
+	Server           string
+	KeyExchanges     []string
+	TLS              bool
+	Timeout          time.Duration
+	ActiveTransfers  bool
+	ActiveListenAddr string
 }
 
 // Client provides basic functionality to interact with a SFTP server.
@@ -61,7 +63,7 @@ func (c *Client) Create(filePath string) (io.ReadWriteCloser, error) {
 	return c.sftpClient.Create(filePath)
 }
 
-//Remove a file or directory
+// Remove a file or directory
 func (c *Client) Remove(path string) error {
 	if err := c.connect(); err != nil {
 		return fmt.Errorf("connect: %w", err)
@@ -72,8 +74,8 @@ func (c *Client) Remove(path string) error {
 	return c.sftpClient.Remove(path)
 }
 
-//Glob returns the names of all files matching pattern or nil if there is no matching file. The syntax of patterns is the same as in Match. The pattern may describe hierarchical names such as /usr/*/bin/ed.
-//Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is ErrBadPattern, when pattern is malformed.
+// Glob returns the names of all files matching pattern or nil if there is no matching file. The syntax of patterns is the same as in Match. The pattern may describe hierarchical names such as /usr/*/bin/ed.
+// Glob ignores file system errors such as I/O errors reading directories. The only possible returned error is ErrBadPattern, when pattern is malformed.
 func (c *Client) Glob(pattern string) (matches []string, err error) {
 	if err := c.connect(); err != nil {
 		return nil, fmt.Errorf("connect: %w", err)
@@ -241,11 +243,13 @@ func (c *Client) connect() error {
 			ClientAuth:         tls.RequestClientCert,
 		}
 		cfg := goftp.Config{
-			User:      c.config.Username,
-			Password:  c.config.Password,
-			Timeout:   c.config.Timeout,
-			TLSConfig: &config,
-			TLSMode:   goftp.TLSExplicit, //TLSImplicit TLSExplicit
+			User:             c.config.Username,
+			Password:         c.config.Password,
+			Timeout:          c.config.Timeout,
+			TLSConfig:        &config,
+			TLSMode:          goftp.TLSExplicit, //TLSImplicit TLSExplicit
+			ActiveTransfers:  c.config.ActiveTransfers,
+			ActiveListenAddr: c.config.ActiveListenAddr,
 		}
 		c.ftpClient, err = goftp.DialConfig(cfg, c.config.Server)
 		return err
